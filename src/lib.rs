@@ -308,7 +308,7 @@ fn argv_from(position: usize) -> PyResult<Vec<String>> {
 
 /// A Python module implemented in Rust.
 #[pymodule]
-fn psbase(_py: Python, m: &PyModule) -> PyResult<()> {
+fn pacspeddbase(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(print, m)?)?;
     m.add_function(wrap_pyfunction!(get_env, m)?)?;
     m.add_class::<System>()?;
