@@ -55,6 +55,24 @@ fn print(text: &str) -> PyResult<()> {
     Ok(())
 }
 
+/// Read User Input, but in Rust style
+/// 
+/// Args:
+///     prompt (str): The Input prompt
+#[pyfunction]
+fn input(prompt: &str) -> PyResult<String> {
+    /// Prompt Show
+    print!("{}", prompt);
+    std::io::stdout().flush().ok();
+
+    // Read User Input
+    let mut input = String::new();
+    match std::io::stdin().read_line(&mut input) {
+        Ok(_) => Ok(input.trim().to_string()),
+        Err(_) => Err(PyErr::new::<pyo3::exceptions::PyIOError, _>("Failed to Read Input")),
+    }
+}
+
 /// Print a colored message to STDOUT
 ///
 /// Args:
@@ -255,6 +273,55 @@ impl System {
         Ok(())
     }
 
+    /// List Files in Dir, but in Better output
+    /// 
+    /// Args:
+    ///     path: The Path That you want Show
+    fn listdir(&self, path: &str) -> PyResult<()> {
+        let _output = if cfg!(target_os = "windows") {
+            Command::new("dir")
+                .arg(path)
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .output()
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to List Files: {}", e)))?
+        } else {
+            Command::new("ls")
+                .arg("-A")
+                .arg(path)
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .output()
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to List Files: {}", e)))?
+        };
+
+        Ok(())
+    }
+
+    /// Source/Call files
+    /// 
+    /// Args:
+    ///  Path (str): The Path to Source
+    fn source(&self, path: &str) -> PyResult<()> {
+        let _output = if cfg!(target_os = "windows") {
+            Command::new("call")
+                .arg(path)
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .output()
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to Call File: {}", e)))?
+        } else {
+            Command::new("source")
+                .arg(path)
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .output()
+                .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(format!("Failed to Source File: {}", e)))?
+        };
+
+        Ok(())
+    }
+
 }
 
 #[pyclass]
@@ -317,5 +384,6 @@ fn pacspeddbase(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(cprint, m)?)?;
     m.add_function(wrap_pyfunction!(argv, m)?)?;
     m.add_function(wrap_pyfunction!(argv_from, m)?)?;
+    m.add_function(wrap_pyfunction!(input, m)?)?;
     Ok(())
 }
